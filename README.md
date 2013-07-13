@@ -89,3 +89,9 @@ socket in *pypwrctrl*:
 
 Devices can also be named.
 
+# TODO
+
+* resend messages
+* check state after changing it
+* add ability to control devices without configuration and '-d'
+
