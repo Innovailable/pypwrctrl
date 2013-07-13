@@ -12,11 +12,25 @@ class Plug:
         self.index = index
         self.state = state
 
-    def switch(self, state):
+    def switch(self, state, timeout=1):
         cmd = 'on' if state else 'off'
         msg = "Sw_{}{}".format(cmd, self.index)
+
+        self.device.master._drain_socket()
+
         self.device._send(msg, True)
 
+        expected = "1" if state else "0"
+
+        def check_switch(data):
+            part = data.split(':')[5+self.index]
+            new_state = part.rsplit(',', 1)[1]
+
+            print(part)
+
+            return new_state == expected
+
+        return self.device._expect(check_switch, timeout)
 
 class PlugDevice:
 
@@ -47,8 +61,11 @@ class PlugDevice:
     def _send(self, data, secured=False):
         self.master._send(self.address, data, secured)
 
+    def _expect(self, condition, timeout):
+        return self.master._expect(self.address, condition, timeout)
+
     def _receive(self, until):
-        return self.master._receive(until, self.address)
+        return self.master._receive(self.address, until)
 
     def reset(self):
         self._send("Reset:", True)
@@ -92,6 +109,22 @@ class PlugMaster:
 
         self.sout.sendto(data.encode('utf8'), (address, self.pout))
 
+    def _drain_socket(self):
+        while self._receive(None, 0):
+            print("draining")
+
+    def _expect(self, address, condition, timeout):
+        until = time.time() + timeout
+
+        while True:
+            data = self._receive(address, until)
+
+            if data == None:
+                return False
+
+            if condition(data):
+                return True
+
     def _receive(self, address, until):
         sin = self.sin
 
@@ -111,7 +144,7 @@ class PlugMaster:
                 return None
 
             # receive
-            data, sender = self.sin.recvfrom(2048)
+            data, (sender, port) = self.sin.recvfrom(2048)
 
             # right sender?
             if address == None or sender == address:

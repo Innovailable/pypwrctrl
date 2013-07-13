@@ -81,8 +81,18 @@ def switch(master, args, state):
     elif len(plugs) > 1:
         print("Warning: Setting multiple matching plugs")
 
+    errors = False
+
     for plug in plugs:
-        plug.switch(state)
+        if not plug.switch(state):
+            errors = True
+            state_name = "on" if state else "off"
+            print("Unable to switch {} plug '{}' on device '{}'".format(state_name, plug.name, plug.device.name))
+
+    if errors:
+        return 1
+    else:
+        return 0
 
 def reset(master, args):
     if len(args) == 0:
