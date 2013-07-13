@@ -21,7 +21,7 @@ the plugs being controlled by anyone having access to the network!
 
 Simply run:
 
-	easy_install --user pypwrctrl
+	easy_install3 --user pypwrctrl
 
 Or checkout the repository and run:
 
