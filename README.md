@@ -44,8 +44,8 @@ First let us try to discover the device:
 
 	pypwrctrl -d -i 4165 -o 4166 -u ulf -p secret show
 
-The *-d* is the switch which enables network discovery and the other two
-switches tell the program which ports are used for communication.
+The *-d* is the switch which enables network discovery and the other switches
+tell the program which ports and user credentials are used.
 
 Always typing the port options is tiresome. We should save them in the
 configuration file:
