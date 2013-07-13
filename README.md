@@ -17,11 +17,6 @@ credentials are tranmitted as plaintext in the commands requiring
 authentication. Never use this tool or this protocol if you cannot live with
 the plugs being controlled by anyone having access to the network!
 
-Furthermore there is no feedback on the state changes in the protocol. Your
-packages might get lost somewhere in your network and you would never know it.
-I might implement resends and status checks after the commands to resolve this
-issue in the future.
-
 ## Installation
 
 Simply run:
