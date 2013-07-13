@@ -149,8 +149,8 @@ class PlugMaster:
                 # add unblocked plugs
                 for index, part in enumerate(parts[6:14]):
                     if not blocked & 1 << index:
-                        name, active = part.rsplit(',', 1)
-                        plugs.append((index + 1, name, int(active)))
+                        pname, active = part.rsplit(',', 1)
+                        plugs.append((index + 1, pname, int(active)))
 
                 device = self.create_device(address, name, plugs)
 
