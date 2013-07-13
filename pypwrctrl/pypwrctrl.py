@@ -45,8 +45,6 @@ class Plug:
             part = data.split(':')[5+self.index]
             new_state = part.rsplit(',', 1)[1]
 
-            print(part)
-
             return new_state == expected
 
         return self.device._expect(check_switch, timeout)
@@ -130,7 +128,7 @@ class PlugMaster:
 
     def _drain_socket(self):
         while self._receive(None, 0):
-            print("draining")
+            pass
 
     def _expect(self, address, condition, timeout):
         until = time.time() + timeout
