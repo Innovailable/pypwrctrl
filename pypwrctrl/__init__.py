@@ -1,1 +1,1 @@
-from pypwrctrl import Plug, PlugDevice, PlugMaster
+from pypwrctrl.pypwrctrl import Plug, PlugDevice, PlugMaster
