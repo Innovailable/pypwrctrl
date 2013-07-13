@@ -3,7 +3,60 @@
 from pypwrctrl import PlugMaster
 
 import sys
+import os.path
+import re
+
 from optparse import OptionParser
+from configparser import ConfigParser
+
+CONFIG_FILE=os.path.expanduser("~/.pypwrctrl")
+
+GENERAL_SECTION="GENERAL"
+PLUG_PREFIX="plug_"
+
+def print_master(master):
+    device_count = len(master.devices)
+    plug_count = 0
+
+    for device in master.devices:
+        print("{} ({}):".format(device.name, device.address))
+
+        for plug in device.plugs:
+            print("- {}".format(plug.name), end="")
+            if plug.state >= 0:
+                print(" ({})".format("on" if plug.state else "off"), end="")
+            print()
+
+        print()
+
+        plug_count += len(device.plugs)
+
+    return device_count, plug_count
+
+def load_devices(master, config):
+    for section in config.sections():
+        if section == GENERAL_SECTION:
+            continue
+
+        if not config.has_option(section, 'name'):
+            print("Device without name in configuration, skipping")
+            continue
+
+        address = section
+        name = config.get(section, 'name')
+
+        plugs = []
+
+        for option in config.options(section):
+            if not re.match(PLUG_PREFIX + '\d+', option):
+                continue
+
+            index = int(option[len(PLUG_PREFIX):])
+            pname = config.get(section, option)
+
+            plugs.append((index, pname))
+
+        master.create_device(address, name, plugs)
 
 def switch(master, args, state):
     if len(args) == 0:
@@ -50,28 +103,40 @@ def reset(master, args):
         device.reset()
 
 def save(master, args):
-    raise NotImplemented("Configuration saving")
+    parser = ConfigParser()
 
-def show(master, args):
-    device_count = len(master.devices)
-    plug_count = 0
+    parser.add_section(GENERAL_SECTION)
+    parser.set(GENERAL_SECTION, 'user', master.user)
+    parser.set(GENERAL_SECTION, 'password', master.password)
+    parser.set(GENERAL_SECTION, 'pin', str(master.pin))
+    parser.set(GENERAL_SECTION, 'pout', str(master.pout))
 
     for device in master.devices:
-        print("{} ({}):".format(device.name, device.address))
+        parser.add_section(device.address)
+        parser.set(device.address, 'name', device.name)
 
         for plug in device.plugs:
-            print("- {}".format(plug.name), end="")
-            if plug.state >= 0:
-                print(" ({})".format("on" if plug.state else "off"), end="")
-            print()
+            key = PLUG_PREFIX + str(plug.index)
+            parser.set(device.address, key, plug.name)
 
-        print()
+    with open(CONFIG_FILE, 'w') as out:
+        parser.write(out)
 
-        plug_count += len(device.plugs)
+    device_count, plug_count = print_master(master)
 
-    print("There are {} device(s) with {} plug(s)".format(device_count, plug_count))
+    if device_count:
+        print("Saved config with {} device(s) and {} plugs".format(device_count, plug_count))
+    else:
+        print("Saved config without any devices")
+
+def show(master, args):
+    device_count, plug_count = print_master(master)
+
+    print("There are {} device(s) and {} plug(s)".format(device_count, plug_count))
 
 def main():
+    # available commands
+
     commands = {
             'on': (
                 lambda master, args: switch(master, args, True),
@@ -100,6 +165,20 @@ def main():
                 ),
             }
 
+    # load config file if it exists
+
+    config = ConfigParser()
+    config.read([CONFIG_FILE])
+
+    # default values
+
+    fallback_user = config.get(GENERAL_SECTION, 'user', fallback='admin')
+    fallback_password = config.get(GENERAL_SECTION, 'password', fallback='anel')
+    fallback_pin = config.getint(GENERAL_SECTION, 'pin', fallback=75)
+    fallback_pout = config.getint(GENERAL_SECTION, 'pout', fallback=77)
+
+    # option parsing
+
     usage = "usage: %prog [options] command [comand options]"
 
     parser = OptionParser(usage=usage)
@@ -112,14 +191,14 @@ def main():
             action="store_true", dest="discover",
             help="Discover devices on network")
 
-    parser.add_option("-u", "--user", dest="user", default="admin",
+    parser.add_option("-u", "--user", dest="user", default=fallback_user,
             help="Username on device (default from config or 'admin')", metavar="USER")
-    parser.add_option("-p", "--password", dest="password", default="anel",
+    parser.add_option("-p", "--password", dest="password", default=fallback_password,
             help="Password on device (default from config or  'anel')", metavar="PASSWORD")
 
-    parser.add_option("-i", "--in", dest="pin", default=75, type="int",
+    parser.add_option("-i", "--in", dest="pin", default=fallback_pin, type="int",
             help="Port to use for receiving (sending from device perspective, default from config or 75)", metavar="PORT")
-    parser.add_option("-o", "--out", dest="pout", default=77, type="int",
+    parser.add_option("-o", "--out", dest="pout", default=fallback_pout, type="int",
             help="Port to use for sending (sending from device perspective, default from config or 77)", metavar="PORT")
 
     (options, args) = parser.parse_args()
@@ -147,11 +226,11 @@ def main():
         print("Unknown command, sorry")
         return 1
 
-    # do we have to load the configuration?
-    if not options.discover and command != 'save':
-        raise NotImplemented("Configuration loading")
-
     master = PlugMaster(options.pin, options.pout, options.user, options.password)
+
+    # do we have to load the configured devices?
+    if not options.discover and command != 'save':
+        load_devices(master, config)
 
     if options.discover:
         master.discover()
