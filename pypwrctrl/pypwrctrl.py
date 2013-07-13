@@ -50,6 +50,10 @@ class PlugDevice:
     def _receive(self, until):
         return self.master._receive(until, self.address)
 
+    def reset(self):
+        self._send("Reset:", True)
+
+
 class PlugMaster:
 
     def __init__(self, pin=77, pout=74, user="admin", password="anel"):
