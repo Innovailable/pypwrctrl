@@ -26,6 +26,12 @@ setup(
         "Development Status :: 4 - Beta",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Natural Language :: English",
+        "Programming Language :: Python :: 3",
+        "Intended Audience :: Developers",
+        "Intended Audience :: System Administrators",
+        "Intended Audience :: End Users/Desktop",
+        "Topic :: Home Automation",
+        "Topic :: Utilities",
     ],
     entry_points={
         'console_scripts': [
