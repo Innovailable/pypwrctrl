@@ -1,4 +1,4 @@
-# pypwrctr
+# pypwrctrl
 
 ## Introduction
 
