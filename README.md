@@ -24,9 +24,12 @@ issue in the future.
 
 ## Installation
 
-Simply run
+Simply run:
 
 	./setup.py install --user
+
+*pypwrctrl* depends only on 'python3' and 'python3-setuptools' for
+installation.
 
 ## Usage
 
