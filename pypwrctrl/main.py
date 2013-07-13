@@ -76,6 +76,7 @@ def switch(master, args, state):
 
     if len(plugs) == 0:
         print("No matching plugs found, sorry")
+        print("Please use '-d' to address devices which are not in your configuration.")
         return 1
     elif len(plugs) > 1:
         print("Warning: Setting multiple matching plugs")
@@ -95,6 +96,7 @@ def reset(master, args):
 
     if len(devices) == 0:
         print("No matching devices found, sorry")
+        print("Please use '-d' to address devices which are not in your configuration.")
         return 1
     elif len(devices) > 1:
         print("Warning: Resetting multiple matching devices")
