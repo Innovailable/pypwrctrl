@@ -17,6 +17,7 @@ class Plug:
         msg = "Sw_{}{}".format(cmd, self.index)
         self.device._send(msg, True)
 
+
 class PlugDevice:
 
     def __init__(self, master, address, name, plug_descs):
@@ -32,6 +33,17 @@ class PlugDevice:
 
             self.plugs.append(Plug(self, index, name, state))
 
+    def search_plug(self, needle):
+        found = set()
+
+        if needle.isdigit():
+            index = int(needle)
+            found.update(filter(lambda plug: plug.index == index, self.plugs))
+
+        found.update(filter(lambda plug: plug.name == needle, self.plugs))
+
+        return found
+
     def _send(self, data, secured=False):
         self.master._send(self.address, data, secured)
 
@@ -46,17 +58,34 @@ class PlugMaster:
         self.user = user
         self.password = password
 
-        self.sout = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sout.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        self.devices = []
 
         self.sin = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sin.bind(('0.0.0.0', pin))
+
+        self.sout = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sout.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+
+    def search_device(self, needle):
+        found = set()
+
+        found.update(filter(lambda dev: dev.address == needle, self.devices))
+        found.update(filter(lambda dev: dev.name == needle, self.devices))
+
+        return found
+
+    def search_plug(self, needle):
+        found = set()
+
+        for device in self.devices:
+            found.update(device.search_plug(needle))
+
+        return found
 
     def _send(self, address, data, secured=False):
         if secured:
             data = data + self.user + self.password
 
-        print(data)
         self.sout.sendto(data.encode('utf8'), (address, self.pout))
 
     def _receive(self, address, until):
@@ -99,7 +128,7 @@ class PlugMaster:
             if data:
                 parts = data.strip().split(':')
 
-                name = parts[1]
+                name = parts[1].strip()
                 address = parts[2]
 
                 # add only once
@@ -128,5 +157,7 @@ class PlugMaster:
         return devices
 
     def create_device(self, address, name, plugs):
-        return PlugDevice(self, address, name, plugs)
+        device = PlugDevice(self, address, name, plugs)
+        self.devices.append(device)
+        return device
 
