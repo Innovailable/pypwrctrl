@@ -21,7 +21,14 @@ the plugs being controlled by anyone having access to the network!
 
 Simply run:
 
+	easy_install --user pypwrctrl
+
+Or checkout the repository and run:
+
 	./setup.py install --user
+
+You can remove the '--user' in both methods to install for all users of your
+system (requires root privileges).
 
 *pypwrctrl* depends only on 'python3' and 'python3-setuptools' for
 installation.
