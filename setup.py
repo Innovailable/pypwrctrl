@@ -12,7 +12,7 @@ def read(fname):
 
 setup(
     name = "pypwrctrl",
-    version = "0.1.2",
+    version = "0.1.3",
     author = "Thammi",
     author_email = "thammi@chaossource.net",
     description = ("Anel NET-PwrCtrl library and command line utility"),
