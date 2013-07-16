@@ -23,6 +23,8 @@ import time
 import socket
 import select
 
+CHARSET="latin"
+
 class Plug:
 
     def __init__(self, device, index, name, state=-1):
@@ -124,7 +126,7 @@ class PlugMaster:
         if secured:
             data = data + self.user + self.password
 
-        self.sout.sendto(data.encode('utf8'), (address, self.pout))
+        self.sout.sendto(data.encode(CHARSET), (address, self.pout))
 
     def _drain_socket(self):
         while self._receive(None, 0):
@@ -165,7 +167,7 @@ class PlugMaster:
 
             # right sender?
             if address == None or sender == address:
-                return data.decode('utf8')
+                return data.decode(CHARSET)
 
     def discover(self, timeout=1):
         known = set()
