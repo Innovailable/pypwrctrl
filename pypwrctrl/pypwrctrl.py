@@ -92,7 +92,7 @@ class PlugDevice:
 
 class PlugMaster:
 
-    def __init__(self, pin=77, pout=74, user="admin", password="anel"):
+    def __init__(self, pin=77, pout=75, user="admin", password="anel"):
         self.pin = pin
         self.pout = pout
         self.user = user
