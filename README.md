@@ -19,6 +19,9 @@ the plugs being controlled by anyone having access to the network!
 
 ## Installation
 
+The program was written on Linux but should also run on Windows, Mac OS X and
+every other operating system supported by Python 3.
+
 Simply run:
 
 	easy_install3 --user pypwrctrl
