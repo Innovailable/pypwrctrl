@@ -101,6 +101,7 @@ Devices can also be named.
 * add ability to control devices without configuration and '-d'
 * test with more than one device and other product versions (used
   NET-PwrCtrl HOME)
+* support Temperature, IO, ...
 
 ## License
 
