@@ -92,19 +92,27 @@ class PlugDevice:
 
 class PlugMaster:
 
-    def __init__(self, pin=77, pout=75, user="admin", password="anel"):
+    def __init__(self, pin=77, pout=75, user="admin", password="anel",
+                 iface=None):
         self.pin = pin
         self.pout = pout
         self.user = user
         self.password = password
 
+        self.iface = iface
         self.devices = []
 
         self.sin = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        if self.iface is not None:
+                self.sin.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE,
+                                    bytes(iface, 'UTF-8'))
         self.sin.bind(('0.0.0.0', pin))
 
         self.sout = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sout.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        if self.iface is not None:
+                self.sout.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE,
+                                     bytes(iface, 'UTF-8'))
 
     def search_device(self, needle):
         found = set()
