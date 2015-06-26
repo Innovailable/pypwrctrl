@@ -22,6 +22,7 @@
 import time
 import socket
 import select
+import struct
 
 CHARSET="latin"
 
@@ -50,6 +51,20 @@ class Plug:
             return new_state == expected
 
         return self.device._expect(check_switch, timeout)
+
+    def timed_off(self, time, timeout=1):
+        msg = 'St_off{}'.format(self.index).encode(CHARSET)
+        msg += struct.pack('>h', time)
+
+        self.device.master._drain_socket()
+
+        self.device._send(msg, True)
+
+        def check_response(data):
+            return True
+
+        return self.device._expect(check_response, timeout)
+
 
 class PlugDevice:
 
@@ -123,10 +138,14 @@ class PlugMaster:
         return found
 
     def _send(self, address, data, secured=False):
-        if secured:
-            data = data + self.user + self.password
+        if isinstance(data, str):
+            data = data.encode(CHARSET)
 
-        self.sout.sendto(data.encode(CHARSET), (address, self.pout))
+        if secured:
+            auth = self.user + self.password
+            data = data + auth.encode(CHARSET)
+
+        self.sout.sendto(data, (address, self.pout))
 
     def _drain_socket(self):
         while self._receive(None, 0):

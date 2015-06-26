@@ -34,6 +34,7 @@ CONFIG_FILE=os.path.expanduser("~/.pypwrctrl")
 GENERAL_SECTION="GENERAL"
 PLUG_PREFIX="plug_"
 
+
 def print_master(master):
     device_count = len(master.devices)
     plug_count = 0
@@ -52,6 +53,7 @@ def print_master(master):
         plug_count += len(device.plugs)
 
     return device_count, plug_count
+
 
 def load_devices(master, config):
     for section in config.sections():
@@ -77,6 +79,7 @@ def load_devices(master, config):
             plugs.append((index, pname))
 
         master.create_device(address, name, plugs)
+
 
 def switch(master, args, state):
     if len(args) == 0:
@@ -114,6 +117,49 @@ def switch(master, args, state):
     else:
         return 0
 
+
+def timed_off(master, args):
+    if len(args) < 2:
+        print("Not enough arguments. Please add at least a plug name.")
+        return 1
+    elif len(args) == 2:
+        plugs = master.search_plug(args[1])
+    elif len(args) == 3:
+        plugs = set()
+        devices = master.search_device(args[1])
+
+        for device in devices:
+            plugs.update(device.search_plug(args[2]))
+    else:
+        print("Too many arguments. Only plug name and optionally device name expected.")
+        return 1
+
+    if len(plugs) == 0:
+        print("No matching plugs found, sorry")
+        print("Please use '-d' to address devices which are not in your configuration.")
+        return 1
+    elif len(plugs) > 1:
+        print("Warning: Setting multiple matching plugs")
+
+    try:
+        time = int(args[0])
+    except:
+        print("Please give a valid number of seconds")
+        return 1
+
+    errors = False
+
+    for plug in plugs:
+        if not plug.timed_off(time):
+            errors = True
+            print("Unable to switch off plug '{}' on device '{}'".format(plug.name, plug.device.name))
+
+    if errors:
+        return 1
+    else:
+        return 0
+
+
 def reset(master, args):
     if len(args) == 0:
         print("Not enough arguments. Please add the device name.")
@@ -133,6 +179,7 @@ def reset(master, args):
 
     for device in devices:
         device.reset()
+
 
 def save(master, args):
     parser = ConfigParser()
@@ -161,10 +208,12 @@ def save(master, args):
     else:
         print("Saved config without any devices")
 
+
 def show(master, args):
     device_count, plug_count = print_master(master)
 
     print("There are {} device(s) and {} plug(s)".format(device_count, plug_count))
+
 
 def main():
     # available commands
@@ -179,6 +228,11 @@ def main():
                 lambda master, args: switch(master, args, False),
                 "[device] plug",
                 "switch plug off",
+                ),
+            'timed_off': (
+                lambda master, args: timed_off(master, args),
+                "time [device] plug",
+                "switch plug off after given amount of seconds",
                 ),
             'save': (
                 save,
