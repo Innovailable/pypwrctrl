@@ -189,6 +189,7 @@ def save(master, args):
     parser.set(GENERAL_SECTION, 'password', master.password)
     parser.set(GENERAL_SECTION, 'pin', str(master.pin))
     parser.set(GENERAL_SECTION, 'pout', str(master.pout))
+    parser.set(GENERAL_SECTION, 'iface', str(master.iface))
 
     for device in master.devices:
         parser.add_section(device.address)
@@ -260,8 +261,8 @@ def main():
 
     fallback_user = config.get(GENERAL_SECTION, 'user', fallback='admin')
     fallback_password = config.get(GENERAL_SECTION, 'password', fallback='anel')
-    fallback_pin = config.getint(GENERAL_SECTION, 'pin', fallback=75)
-    fallback_pout = config.getint(GENERAL_SECTION, 'pout', fallback=77)
+    fallback_pin = config.getint(GENERAL_SECTION, 'pin', fallback=77)
+    fallback_pout = config.getint(GENERAL_SECTION, 'pout', fallback=75)
 
     # option parsing
 
@@ -282,10 +283,16 @@ def main():
     parser.add_option("-p", "--password", dest="password", default=fallback_password,
             help="Password on device (default from config or  'anel')", metavar="PASSWORD")
 
-    parser.add_option("-i", "--in", dest="pin", default=fallback_pin, type="int",
-            help="Port to use for receiving (sending from device perspective, default from config or 75)", metavar="PORT")
-    parser.add_option("-o", "--out", dest="pout", default=fallback_pout, type="int",
-            help="Port to use for sending (sending from device perspective, default from config or 77)", metavar="PORT")
+    parser.add_option("-i", "--in", dest="pin", default=fallback_pin,
+                      type="int", help="Port to use for receiving "
+                      "(sending from device perspective, default from config "
+                      "or 77)", metavar="PORT")
+    parser.add_option("-o", "--out", dest="pout", default=fallback_pout,
+                      type="int", help="Port to use for sending (sending from "
+                      "device perspective, default from config or 75)",
+                      metavar="PORT")
+    parser.add_option("-I", "--iface", dest="iface", default=None,
+                      help="Network interface", metavar="IFACE")
 
     (options, args) = parser.parse_args()
 
@@ -312,7 +319,8 @@ def main():
         print("Unknown command, sorry")
         return 1
 
-    master = PlugMaster(options.pin, options.pout, options.user, options.password)
+    master = PlugMaster(options.pin, options.pout, options.user,
+                        options.password, options.iface)
 
     # do we have to load the configured devices?
     if not options.discover and command != 'save':
