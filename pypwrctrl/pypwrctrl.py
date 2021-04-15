@@ -121,13 +121,29 @@ class PlugMaster:
         if self.iface is not None:
                 self.sin.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE,
                                     bytes(iface, 'UTF-8'))
-        self.sin.bind(('0.0.0.0', pin))
+
+        self._bind()
 
         self.sout = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sout.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         if self.iface is not None:
                 self.sout.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE,
                                      bytes(iface, 'UTF-8'))
+
+    def _bind(self, retries=20):
+        try:
+            self.sin.bind(('0.0.0.0', self.pin))
+        except PermissionError as err:
+            # reraise as this is not going to change
+            raise err from None
+        except OSError as err:
+            # probably address in use, can retry
+
+            if retries <= 0:
+                raise err from None
+
+            time.sleep(0.1)
+            self._bind(retries - 1)
 
     def search_device(self, needle):
         found = set()
