@@ -19,6 +19,7 @@
 ##
 ##############################################################################
 
+import sys
 import time
 import socket
 import select
@@ -116,12 +117,23 @@ class PlugMaster:
 
         self.iface = iface
         self.devices = []
+        retry = 5
 
         self.sin = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         if self.iface is not None:
                 self.sin.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE,
                                     bytes(iface, 'UTF-8'))
-        self.sin.bind(('0.0.0.0', pin))
+        while (retry >= 1):
+            try:
+                self.sin.bind(('0.0.0.0', pin))
+                break
+            except OSError as err:
+                if retry == 1 or type(err) == PermissionError:
+                    raise err
+                print("Could not open listening port, going to retry.", file=sys.stderr)
+                time.sleep(1)
+                retry -= 1
+
 
         self.sout = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sout.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
